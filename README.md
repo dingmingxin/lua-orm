@@ -2,7 +2,12 @@
 lua orm lib for database schema, can use like a ordinary lua table
 
 # require
-make a litte change to lua5.3.0(add new metamethod __oldindex)
+- new metamethod __oldindex to hook table attr change when table has it
+
+  modify a litte code in lua5.3.0, you can see detail in this 
+  <a href="https://github.com/pigparadise/lua-orm/commit/8079829b3c3f3a3714c3a947a533e51aa43afd26" target="_blank">commit</a>
+  
+- [lpeg](http://www.inf.puc-rio.br/~roberto/lpeg/) for schema parser
 
 # support
 - basic data type: boolean, number, string, struct, list, map
