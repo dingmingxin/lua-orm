@@ -200,14 +200,14 @@ void luaV_settable (lua_State *L, const TValue *t, TValue *key, StkId val) {
       TValue *oldval = cast(TValue *, luaH_get(h, key));
       /* if previous value is not nil, there must be a previous entry
          in the table; a metamethod has no relevance */
-      if (!ttisnil(oldval) ||
-         /* previous value is nil; must check the metamethod */
-         ((tm = fasttm(L, h->metatable, TM_NEWINDEX)) == NULL &&
-         /* no metamethod; is there a previous entry in the table? */
-         (oldval != luaO_nilobject ||
-         /* no previous entry; must create one. (The next test is
-            always true; we only need the assignment.) */
-         (oldval = luaH_newkey(L, h, key), 1)))) {
+
+      tm = ttisnil(oldval) ? fasttm(L, h->metatable, TM_NEWINDEX) : fasttm(L, h->metatable, TM_OLDINDEX);
+
+      if (tm == NULL &&
+          (oldval != luaO_nilobject ||
+           /* no previous entry; must create one. (The next test is
+              always true; we only need the assignment.) */
+           (oldval = luaH_newkey(L, h, key), 1))) {
         /* no metamethod and (now) there is an entry with given key */
         setobj2t(L, oldval, val);  /* assign new value to that entry */
         invalidateTMcache(h);
@@ -215,10 +215,12 @@ void luaV_settable (lua_State *L, const TValue *t, TValue *key, StkId val) {
         return;
       }
       /* else will try the metamethod */
-    }
-    else  /* not a table; check metamethod */
+    } else { /* not a table; check metamethod */
       if (ttisnil(tm = luaT_gettmbyobj(L, t, TM_NEWINDEX)))
         luaG_typeerror(L, t, "index");
+      if (ttisnil(tm = luaT_gettmbyobj(L, t, TM_OLDINDEX)))
+        luaG_typeerror(L, t, "index");
+    }
     /* try the metamethod */
     if (ttisfunction(tm)) {
       luaT_callTM(L, tm, t, key, val, 0);
