@@ -62,7 +62,7 @@ class_e {
 }
 ```
 
-# code examples
+# lua code examples
 ```
 local orm = require 'orm'
 local type_list = (require 'typedef').parse('test.td', ".")
@@ -70,8 +70,7 @@ orm.init(type_list)
 local obj_a = orm.create('class_a')
 ```
 
-you need make lua first and can see more examples in test_typedef.lua
+you need make lua first and can see more examples in test.lua.
 
-if you want create your own typedef, you can see typedef.lua and test.lua
-
+if you want create your own typedef syntax, you can see typedef.lua.
 
