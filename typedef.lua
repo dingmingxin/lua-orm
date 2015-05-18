@@ -241,16 +241,6 @@ function convert.map(obj)
     }
 end
 
-local function adjust(r)
-    local ret = {}
-
-    return ret
-end
-
-local function check(r)
-    local type_map = {}
-end
-
 local function parse(pattern, filename, dir)
     assert(type(filename) == "string")
     local file_path = dir .. "/".. filename
