@@ -61,80 +61,80 @@ local function namedpat(name, pat)
 end
 
 local typedef = P {
-	"ALL",
+    "ALL",
 
-	FIELD = namedpat(
-      "field",
-      (name * blanks * 
-           (
-               namedpat(
-                   "ref",
-                   typename
-               ) + 
-               
-               namedpat(
-                  "list",
-                  P"[" * typename * P"]"
-               ) + 
+    FIELD = namedpat(
+        "field",
+        (name * blanks * 
+             (
+                 namedpat(
+                     "ref",
+                     typename
+                 ) + 
+                     
+                     namedpat(
+                         "list",
+                         P"[" * typename * P"]"
+                     ) + 
 
-               namedpat(
-                  "map",
-                  P"<" * typename * blank0 * "," * blank0 * typename * P">"
-               ) + 
+                     namedpat(
+                         "map",
+                         P"<" * typename * blank0 * "," * blank0 * typename * P">"
+                     ) + 
 
-               namedpat(
-                   "struct", 
-                   P"{" * multipat(V"FIELD") * P"}"
-               )
-           )
-      )
-  ),
+                     namedpat(
+                         "struct", 
+                         P"{" * multipat(V"FIELD") * P"}"
+                     )
+             )
+        )
+    ),
 
-	STRUCT = namedpat(
-      "struct", 
-      blank0 * name * blank0 * P"{" * multipat(V"FIELD") * P"}"
-  ),
+    STRUCT = namedpat(
+        "struct", 
+        blank0 * name * blank0 * P"{" * multipat(V"FIELD") * P"}"
+    ),
 
-	LIST = namedpat(
-      "list",
-      blank0 * name * blank0 * P"[" * typename * P"]"
-  ),
+    LIST = namedpat(
+        "list",
+        blank0 * name * blank0 * P"[" * typename * P"]"
+    ),
 
-	MAP = namedpat(
-      "map",
-      blank0 * name * blank0 * P"<" * typename * blank0 * "," * blank0 * typename * P">"
-  ),
+    MAP = namedpat(
+        "map",
+        blank0 * name * blank0 * P"<" * typename * blank0 * "," * blank0 * typename * P">"
+    ),
 
-	ALL = multipat(V"STRUCT" + V"LIST" + V"MAP"),
+    ALL = multipat(V"STRUCT" + V"LIST" + V"MAP"),
 }
 
 local schema = blank0 * typedef * blank0
 
 -- parse include
 local function preprocess(filename, dir)
-   local text = {}
-   local path = dir .. "/" .. filename
-   line_infos = {}
-   local idx = 0
-   for line in io.lines(path) do
-       idx = idx + 1
-       local include = string.match(line, "^%s*include%s+([^%s]+)%s*")
-       if not include then
-           local _idx = #text + 1
-           text[_idx] = line
-           line_infos[_idx] = {line = idx, file=path}
-       else
-           local _idx = 0
-           include = dir .. "/" .. include
-           for _line in io.lines(include) do
-               _idx = _idx + 1
-               local idx = #text+1
-               text[idx] = _line
-               line_infos[idx] = {line = _idx, file=include}
-           end
-       end
-   end
-   return table.concat(text, "\n")
+    local text = {}
+    local path = dir .. "/" .. filename
+    line_infos = {}
+    local idx = 0
+    for line in io.lines(path) do
+        idx = idx + 1
+        local include = string.match(line, "^%s*include%s+([^%s]+)%s*")
+        if not include then
+            local _idx = #text + 1
+            text[_idx] = line
+            line_infos[_idx] = {line = idx, file=path}
+        else
+            local _idx = 0
+            include = dir .. "/" .. include
+            for _line in io.lines(include) do
+                _idx = _idx + 1
+                local idx = #text+1
+                text[idx] = _line
+                line_infos[idx] = {line = _idx, file=include}
+            end
+        end
+    end
+    return table.concat(text, "\n")
 end
 
 local keyword_field_type = {
