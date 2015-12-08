@@ -10,7 +10,7 @@ lua orm lib for database schema, can use like a ordinary lua table
 - [lpeg](http://www.inf.puc-rio.br/~roberto/lpeg/) for schema parser
 
 # support
-- basic data type: boolean, number, string, struct, list, map
+- basic data type: boolean, integer, string, struct, list, map
 - custom define class
 - class ref
 
@@ -18,19 +18,19 @@ lua orm lib for database schema, can use like a ordinary lua table
 struct
 ```
 class_a {
-    a number
-    b number
+    a integer
+    b integer
     c boolean
     d string
 }
 ```
 list
 ```
-class_b [number]
+class_b [integer]
 ```
 map
 ```
-class_c <number, string>
+class_c <integer, string>
 ```
 
 class ref
@@ -46,17 +46,17 @@ complex
 ```
 class_e {
     a {
-        b [number]
+        b [integer]
     }
     b [class_c]
     c <string, class_c>
     d {
-        a number
+        a integer
         b string
         c {
-            a number
+            a integer
             b [string]
-            c <string, number>
+            c <string, integer>
         }
     }
 }
