@@ -17,7 +17,7 @@ tprint(obj_a)
 
 print('[TC]: struct set attr')
 obj_a.a = nil
-obj_a.b = 2.1
+obj_a.b = 2
 obj_a.c = true
 obj_a.d = 'hello world'
 tprint(obj_a)

@@ -1,6 +1,6 @@
 class_g {
-    a number
-    b number
+    a integer
+    b integer
     c boolean
     d string
 }

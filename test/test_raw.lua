@@ -7,8 +7,8 @@ local type_list = {
         ['name'] = 'class_a',
         ['type'] = 'struct',
         ['attrs'] = {
-            ['a'] = {type = "number", default = 10},
-            ['b'] = {type = "number"},
+            ['a'] = {type = "integer", default = 10},
+            ['b'] = {type = "integer"},
             ['c'] = {type = "boolean"},
             ['d'] = {type = "string"},
         }
@@ -18,7 +18,7 @@ local type_list = {
     {
         ['name'] = 'class_b',
         ['type'] = 'list',
-        ['item'] = {type = "number"}
+        ['item'] = {type = "integer"}
     },
 
 
@@ -34,7 +34,7 @@ local type_list = {
     {
         ['name'] = 'class_e', 
         ['type'] = 'map',
-        ['key'] = {type = "number", min=1},
+        ['key'] = {type = "integer", min=1},
         ['value'] = {type = "string"},
     },
 
@@ -48,7 +48,7 @@ local type_list = {
                     ['b'] = {
                         ['type'] = "list",
                         ['item'] = {
-                            ["type"] = "number",
+                            ["type"] = "integer",
                         }
                     }
                 }

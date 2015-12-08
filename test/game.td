@@ -1,45 +1,45 @@
 Profile {
     name string
-    gender number
-    exp number
-    lv number
-    pl number
-    gold number
-    diamond number
-    vip number
-    create_time number
+    gender integer
+    exp integer
+    lv integer
+    pl integer
+    gold integer
+    diamond integer
+    vip integer
+    create_time integer
 }
 
 ItemBaseAttr {
-    type number
-    value number
+    type integer
+    value integer
 }
 
 Item {
-    id number
+    id integer
     uuid string
     is_bind boolean
     base_attrs [ItemBaseAttr]
 }
 
 StackableItem {
-    id number
-    amount number
+    id integer
+    amount integer
 }
 
 UniqueItemSet {
-    id number
+    id integer
     items <string, Item>
 }
 
 EquipSlot {
-    id number
+    id integer
     item Item
 }
 
 BagMgr {
-    stackable <number, StackableItem>
-    unique <number, UniqueItemSet>
+    stackable <integer, StackableItem>
+    unique <integer, UniqueItemSet>
 }
 
 Player {
@@ -47,5 +47,5 @@ Player {
     uuid string
     profile Profile # test
     bag BagMgr
-    equip <number, EquipSlot>
+    equip <integer, EquipSlot>
 }

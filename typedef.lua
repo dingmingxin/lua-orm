@@ -139,13 +139,13 @@ end
 
 local keyword_field_type = {
     boolean = true,
-    number = true,
+    integer = true,
     string = true,
 }
 
 local keyword_map = {
     boolean = true,
-    number = true,
+    integer = true,
     string = true,
     struct = true,
     list = true,

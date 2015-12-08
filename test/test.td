@@ -1,15 +1,15 @@
 include test2.td
 
 class_a {
-    a number
-    b number
+    a integer
+    b integer
     c boolean
     d string
 }
 
-class_b [number]
+class_b [integer]
 
-class_c <number, string>
+class_c <integer, string>
 
 class_d {
     a class_a
@@ -19,17 +19,17 @@ class_d {
 
 class_e {
     a {
-        b [number]
+        b [integer]
     }
     b [class_d]
     c <string, class_d>
     d {
-        a number
+        a integer
         b string
         c {
-            a number
+            a integer
             b [string]
-            c <string, number>
+            c <string, integer>
         }
     }
 }

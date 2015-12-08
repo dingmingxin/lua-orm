@@ -2,7 +2,7 @@ local M = {}
 
 M.KEYWORD_MAP = {
     boolean = true,
-    number = true,
+    integer = true,
     string = true,
     struct = true,
     list = true,
@@ -60,7 +60,7 @@ function M.get_default(cls)
     end
     if cls_type == 'boolean' then
         return cls.default or false
-    elseif cls_type == 'number' then
+    elseif cls_type == 'integer' then
         return cls.default or 0
     elseif cls_type == 'string' then
         return cls.default or ""
@@ -80,10 +80,10 @@ function M.parse_string(cls, s)
     return tostring(s)
 end
 
-function M.parse_number(cls, s)
-    local value = tonumber(s)
+function M.parse_integer(cls, s)
+    local value = math.tointeger(s)
     if value == nil then
-        _cls_parse_error(cls, s, "is not number")
+        _cls_parse_error(cls, s, "is not integer")
     end
 
     return value
@@ -150,8 +150,8 @@ end
 
 local data_parsers = {
     boolean = M.parse_boolean,
+    integer = M.parse_integer,
     string = M.parse_string,
-    number = M.parse_number,
     struct = M.parse_struct,
     list = M.parse_list,
     map = M.parse_map,
