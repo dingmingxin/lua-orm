@@ -169,6 +169,11 @@ static int luaB_rawset (lua_State *L) {
   return 1;
 }
 
+static int luaB_enable_oldindex (lua_State *L) {
+  luaL_checktype(L, 1, LUA_TTABLE);
+  lua_enable_oldindex(L, 1, lua_toboolean(L, 2));
+  return 0;
+}
 
 static int luaB_collectgarbage (lua_State *L) {
   static const char *const opts[] = {"stop", "restart", "collect",
@@ -471,6 +476,7 @@ static const luaL_Reg base_funcs[] = {
   {"rawlen", luaB_rawlen},
   {"rawget", luaB_rawget},
   {"rawset", luaB_rawset},
+  {"enable_oldindex", luaB_enable_oldindex},
   {"select", luaB_select},
   {"setmetatable", luaB_setmetatable},
   {"tonumber", luaB_tonumber},

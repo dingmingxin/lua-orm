@@ -88,6 +88,20 @@
         1)))
 
 
+#define Protect(x)	{ {x;}; base = ci->u.l.base; }
+
+#define luaV_fastset_kisTVal(L,t,k,slot,f,v) \
+  (!ttistable(t) \
+   ? (slot = NULL, 0) \
+   : (slot = f(hvalue(t), k), \
+      ttisnil(slot) ? 0 \
+      : (((hvalue(t))->oldindex == 1) \
+         ? ((Protect(luaV_oldindexset(L, t, k, v, cast(TValue *,slot)))), 1) \
+         : (luaC_barrierback(L, hvalue(t), v), setobj2t(L, cast(TValue *,slot), v), 1) \
+        ) \
+      ) \
+   )
+
 #define luaV_settable(L,t,k,v) { const TValue *slot; \
   if (!luaV_fastset(L,t,k,slot,luaH_get,v)) \
     luaV_finishset(L,t,k,v,slot); }
@@ -103,6 +117,8 @@ LUAI_FUNC void luaV_finishget (lua_State *L, const TValue *t, TValue *key,
                                StkId val, const TValue *tm);
 LUAI_FUNC void luaV_finishset (lua_State *L, const TValue *t, TValue *key,
                                StkId val, const TValue *oldval);
+LUAI_FUNC void luaV_oldindexset (lua_State *L, const TValue *t, TValue *key,
+                                 StkId val, const TValue *slot);
 LUAI_FUNC void luaV_finishOp (lua_State *L);
 LUAI_FUNC void luaV_execute (lua_State *L);
 LUAI_FUNC void luaV_concat (lua_State *L, int total);

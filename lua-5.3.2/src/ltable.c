@@ -408,6 +408,7 @@ Table *luaH_new (lua_State *L) {
   t->flags = cast_byte(~0);
   t->array = NULL;
   t->sizearray = 0;
+  t->oldindex = 0;
   setnodevector(L, t, 0);
   return t;
 }

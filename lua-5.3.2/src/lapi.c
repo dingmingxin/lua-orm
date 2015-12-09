@@ -895,6 +895,16 @@ LUA_API void lua_setuservalue (lua_State *L, int idx) {
 }
 
 
+LUA_API void lua_enable_oldindex(lua_State *L, int idx, const int enable) {
+  StkId o;
+  lua_lock(L);
+  o = index2addr(L, idx);
+  api_check(L, ttistable(o), "table expected");
+  hvalue(o)->oldindex = enable;
+  lua_unlock(L);
+}
+
+
 /*
 ** 'load' and 'call' functions (run Lua code)
 */

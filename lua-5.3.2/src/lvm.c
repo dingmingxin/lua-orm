@@ -223,6 +223,34 @@ void luaV_finishset (lua_State *L, const TValue *t, TValue *key,
   luaG_runerror(L, "settable chain too long; possible loop");
 }
 
+/* for table enable_oldindex, set exist value */
+void luaV_oldindexset(lua_State *L, const TValue *t, TValue *k, StkId v, const TValue *slot) {
+  if(k != NULL && !ttisnil(k) && k != luaO_nilobject) {
+    /* // --- debug print code --- */
+    /* printf("luaV_oldindexset_a k:<%d>, v:<%d>\n", ttnov(k), ttnov(v)); */
+    /* if(ttisnumber(k)) { */
+    /*   printf("k=%.0f\n", nvalue(k)); */
+    /* } else if (ttisstring(k)) { */
+    /*   printf("k=%s\n", svalue(k)); */
+    /* } */
+    /* if(ttisnumber(v)) { */
+    /*   printf("v=%.0f\n", nvalue(v)); */
+    /* } else if (ttisstring(v)) { */
+    /*   printf("v=%s\n", svalue(v)); */
+    /* } */
+
+    const TValue *tm = fasttm(L, hvalue(t)->metatable, TM_OLDINDEX);
+    if(tm != NULL && ttisfunction(tm)) {
+      luaT_callTM(L, tm, t, k, v, 0);
+      return;
+    }
+  }
+
+  // origin
+  luaC_barrierback(L, hvalue(t), v);
+  setobj2t(L, cast(TValue *,slot), v);
+  return;
+}
 
 /*
 ** Compare two strings 'ls' x 'rs', returning an integer smaller-equal-
@@ -730,8 +758,6 @@ void luaV_finishOp (lua_State *L) {
 #define donextjump(ci)	{ i = *ci->u.l.savedpc; dojump(ci, i, 1); }
 
 
-#define Protect(x)	{ {x;}; base = ci->u.l.base; }
-
 #define checkGC(L,c)  \
 	{ luaC_condGC(L, L->top = (c),  /* limit of live values */ \
                          Protect(L->top = ci->top));  /* restore top */ \
@@ -754,9 +780,8 @@ void luaV_finishOp (lua_State *L) {
 
 /* same for 'luaV_settable' */
 #define settableProtected(L,t,k,v) { const TValue *slot; \
-  if (!luaV_fastset(L,t,k,slot,luaH_get,v)) \
+  if (!luaV_fastset_kisTVal(L,t,k,slot,luaH_get,v))   \
     Protect(luaV_finishset(L,t,k,v,slot)); }
-
 
 
 void luaV_execute (lua_State *L) {
