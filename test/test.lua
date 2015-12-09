@@ -46,6 +46,7 @@ end
 print('[TC]: list remove')
 print("len:", #obj_b)
 table.remove(obj_b, 4)
+print("remove 1")
 for idx, item in ipairs(obj_b) do
     print(idx, item)
 end
@@ -86,10 +87,14 @@ end
 
 print('[TC]: type ref optimize')
 local obj_a = orm.create('class_a')
+print("--- obj_a")
 local obj_b = orm.create('class_b', {4, 2, 3})
+print("--- obj_b")
 local obj_c = orm.create('class_c', {[8] = 'a', [15] = 'b'})
+print("--- obj_c")
 local obj_d = orm.create('class_d', {a=obj_a, b=obj_b, c=obj_c})
-tprint(obj_d)
+print("--- obj_d")
+-- tprint(obj_d)
 local obj_e = orm.create('class_e')
 table.insert(obj_e.b, obj_d)
 obj_e.d = {
@@ -100,5 +105,6 @@ obj_e.d = {
         c = {a = 1, b = 2, c = 3}
     }
 }
-tprint(obj_e)
+-- tprint(obj_e)
 print('--- check default', obj_e.d.c.a)
+assert(obj_e.d.c.a)

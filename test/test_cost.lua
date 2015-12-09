@@ -92,21 +92,29 @@ local data =   {
     ["uuid"] = "551a1b6d67634b94416ec032"
 }
 
-
 local function test_normal()
     local obj = orm.create('Player', data)
     obj.uuid = 'a'
     obj.profile.vip = 1
     obj.bag.unique[1002] = nil
     obj.equip[2] = {item = {id=2001, amount = 1, uuid = 'asdfasdfasd'}}
-    obj.bag = data.bag
 
+    obj.bag = data.bag
     for k, v in pairs(obj.bag.unique) do
         for _k, _v in pairs(v.items) do
         end
     end
+
+    local books = obj.books
+    for i=1, 10 do
+        table.insert(books, {id=2001, amount = 1, uuid = 'asdfasdfasd'})
+    end
+    for i=5, 1, -1 do
+        table.remove(books, i)
+    end
+    
     -- tprint(obj)
-    -- print("is bind", obj.bag.equip[1].item.is_bind)
+    -- print("is bind", obj.equip[1].item.is_bind)
 end
 
 local test_case = {
@@ -121,7 +129,9 @@ for _, case in ipairs(test_case) do
     print(string.format('test case<%s> begin', case.name))
     local t_begin = os.clock()
     for i=1, case.count do
+        -- print("case begin", i)
         case.func()
+        -- print("case end", i)
     end
 
     local t_cost = os.clock() - t_begin

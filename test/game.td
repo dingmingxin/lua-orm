@@ -48,4 +48,5 @@ Player {
     profile Profile # test
     bag BagMgr
     equip <integer, EquipSlot>
+    books [Item]
 }

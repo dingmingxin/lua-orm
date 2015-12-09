@@ -1,3 +1,6 @@
+-- lua function enable_oldindex can enable or disable metamethod __oldindex
+local enable_oldindex = enable_oldindex or (function() end)
+
 local M = {}
 
 M.KEYWORD_MAP = {
@@ -394,8 +397,10 @@ end
 
 function M.create_struct(cls, data)
     local obj = {}
-    -- check data type
+    enable_oldindex(obj, true)
     setmetatable(obj, cls.mt)
+
+    -- check data type
     if data == nil then
         for k, v in pairs(cls.attrs) do
             if not v.is_atom then
@@ -410,12 +415,15 @@ function M.create_struct(cls, data)
             end
         end
     end
+
     return obj
 end
 
 function M.create_list(cls, data)
     local obj = {}
+    enable_oldindex(obj, true)
     setmetatable(obj, cls.mt)
+
     if data == nil then
         return obj
     end
@@ -429,7 +437,9 @@ end
 
 function M.create_map(cls, data)
     local obj = {}
+    enable_oldindex(obj, true)
     setmetatable(obj, cls.mt)
+
     if data == nil then
         return obj
     end
