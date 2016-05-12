@@ -1,5 +1,16 @@
 local orm = require 'orm'
-tprint = require('utils').print_table
+
+local print_table = require('utils').print_table
+local print_table_bypairs = require('utils').print_table_bypairs
+
+tprint = function(t)
+    print(string.format('[ <%s> print.bypairs ]', t))
+    print_table_bypairs(t)
+    print(string.format('[ <%s> print.bynext ]', t))
+    print_table(t)
+    print(string.format('[ <%s> print.end]', t))
+end
+
 
 -- test
 local type_list = (require 'typedef').parse('test.td', "./test")
@@ -56,14 +67,31 @@ obj_b[1] = 100
 obj_b[2] = nil
 tprint(obj_b)
 print("len:", #obj_b)
+print("-- ipairs")
 for idx, item in ipairs(obj_b) do
     print(idx, item)
+end
+
+print("-- pairs")
+for k, v in pairs(obj_b) do
+    print(k, v)
+end
+
+print("-- next", obj_b.__cls)
+for k, v in orm.next, obj_b do
+    print(k, v)
 end
 
 print('[TC]: map')
 local obj_c = orm.create('class_c', {[1] = '2', ['2'] = '2'})
 tprint(obj_c)
+print("-- pairs")
 for k, v in pairs(obj_c) do
+    print(k, v)
+end
+
+print("-- next")
+for k, v in orm.next, obj_c do
     print(k, v)
 end
 
@@ -94,7 +122,7 @@ local obj_c = orm.create('class_c', {[8] = 'a', [15] = 'b'})
 print("--- obj_c")
 local obj_d = orm.create('class_d', {a=obj_a, b=obj_b, c=obj_c})
 print("--- obj_d")
--- tprint(obj_d)
+tprint(obj_d)
 local obj_e = orm.create('class_e')
 table.insert(obj_e.b, obj_d)
 obj_e.d = {
@@ -105,6 +133,6 @@ obj_e.d = {
         c = {a = 1, b = 2, c = 3}
     }
 }
--- tprint(obj_e)
+tprint(obj_e)
 print('--- check default', obj_e.d.c.a)
 assert(obj_e.d.c.a)

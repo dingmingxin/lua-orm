@@ -1,9 +1,6 @@
--- lua function enable_oldindex can enable or disable metamethod __oldindex
-local enable_oldindex = enable_oldindex or (function() end)
-
 local M = {}
 
-M.KEYWORD_MAP = {
+local KEYWORD_MAP = {
     boolean = true,
     integer = true,
     string = true,
@@ -12,7 +9,7 @@ M.KEYWORD_MAP = {
     map = true,
 }
 
-M.CONTAINER_DATA_TYPES = {
+local CONTAINER_DATA_TYPES = {
     struct = true,
     list = true,
     map = true,
@@ -25,6 +22,9 @@ local ERR_CHANGE_KEY_ATTRS = "can't modify key attrs"
 
 M.cls_ref_map = {} -- cls_name : [parent_name, ...]
 local cls_map = {} -- cls_name: cls
+local string_format = string.format
+local math_tointeger = math.tointeger
+
 
 function M.check_ref(node_id, parent_id)
     -- print('check ref', node_id, parent_id)
@@ -33,7 +33,7 @@ function M.check_ref(node_id, parent_id)
     end
 
     if parent_id == node_id then
-        error(string.format('type<%s> ref recursion define', node_id))
+        error(string_format('type<%s> ref recursion define', node_id))
     end
 
     local p_map = M.cls_ref_map[node_id]
@@ -59,7 +59,7 @@ end
 function M.get_default(cls)
     local cls_type = cls.type
     if not cls.is_atom then
-        error(string.format("cls<%s> type<%s> no default", cls.name, cls_type))
+        error(string_format("cls<%s> type<%s> no default", cls.name, cls_type))
     end
     if cls_type == 'boolean' then
         return cls.default or false
@@ -71,7 +71,7 @@ function M.get_default(cls)
 end
 
 local function _cls_parse_error(cls, data, msg)
-    local s = string.format("cls<%s> data<%s> %s", cls.name, data, msg)
+    local s = string_format("cls<%s> data<%s> %s", cls.name, data, msg)
     error(s)
 end
 
@@ -80,11 +80,15 @@ function M.parse_boolean(cls, s)
 end
 
 function M.parse_string(cls, s)
+    local stype = type(s)
+    if stype ~= 'int' and stype ~= 'string' then
+        _cls_parse_error(cls, s, "is not string")
+    end
     return tostring(s)
 end
 
 function M.parse_integer(cls, s)
-    local value = math.tointeger(s)
+    local value = math_tointeger(s)
     if value == nil then
         _cls_parse_error(cls, s, "is not integer")
     end
@@ -126,8 +130,8 @@ function M.parse_list(cls, data)
 
     local ret = {}
     local item_cls = cls.item
-    for _idx, _data in ipairs(data) do
-        table.insert(ret, item_cls:parse(_data))
+    for _idx=1, #data do
+        table.insert(ret, item_cls:parse(data[_idx]))
     end
     return cls:new(ret)
 end
@@ -169,20 +173,20 @@ function M.load_cls_define(cls, parent_name)
     end
     local cls_name = cls.name
 
-    if M.KEYWORD_MAP[cls_name] then
-        error(string.format("cls name<%s> is keyword", cls_name))
+    if KEYWORD_MAP[cls_name] then
+        error(string_format("cls name<%s> is keyword", cls_name))
     end
 
     local data_type = cls.type
     if not data_type then
-        error(string.format("init cls<%s> no data type", cls_name))
+        error(string_format("init cls<%s> no data type", cls_name))
     end
 
-    if not M.KEYWORD_MAP[data_type] then -- ref type
+    if not KEYWORD_MAP[data_type] then -- ref type
         local ref_cls_name = data_type
         local ref_cls = cls_map[ref_cls_name]
         if ref_cls == nil then
-            error(string.format("init cls<%s|%s>, ref illegal ", cls.name, data_type))
+            error(string_format("init cls<%s|%s>, ref illegal ", cls.name, data_type))
         end
 
         M.check_ref(ref_cls.name, parent_name)
@@ -199,36 +203,34 @@ function M.load_cls_define(cls, parent_name)
     cls.id = cls
     local parser = data_parsers[data_type]
     if not parser then
-        error(string.format("data type<%s> no parser", data_type))
+        error(string_format("data type<%s> no parser", data_type))
     end
     cls.parse = parser
     -- print('init obj type', cls.name, data_type, cls.d_cls, cls.parser)
 
     M.check_ref(cls_name, parent_name)
     cls_map[cls_name] = cls
-    cls.is_atom = (M.CONTAINER_DATA_TYPES[data_type] == nil)
+    cls.is_atom = (CONTAINER_DATA_TYPES[data_type] == nil)
     if cls.is_atom then
         return cls
     end
 
     if data_type == 'struct' then
         cls.new = M.create_struct
-        local mt_index = {__cls = cls}
-        cls.mt = {
-            __index = mt_index,
-            __newindex = M.struct_setfield,
-            __oldindex = M.struct_setfield,
+        local mt = {
+            __cls = cls,
         }
+        cls.mt = {__index = mt}
         assert(cls.attrs, "not attrs")
         local attrs = {}
         for k, v in pairs(cls.attrs) do
             if M.KEY_ATTRS[k] then
-                error(string.format("class<%s> define key attr<%s>", cls_name, k))
+                error(string_format("class<%s> define key attr<%s>", cls_name, k))
             end
             v.name = k
             local v_cls = M.load_cls_define(v, cls_name)
             if v_cls.is_atom then -- set default
-                mt_index[k] = M.get_default(v_cls)
+                mt[k] = M.get_default(v_cls)
             end
             attrs[k] = v_cls
         end
@@ -238,11 +240,10 @@ function M.load_cls_define(cls, parent_name)
 
     if data_type == 'list' then
         cls.new = M.create_list
-        cls.mt = {
-            __index = {__cls = cls},
-            __newindex = M.list_setfield,
-            __oldindex = M.list_setfield,
+        local mt = {
+            __cls = cls,
         }
+        cls.mt = {__index = mt}
         cls.item.name = 'item'
         cls.item = M.load_cls_define(cls.item, cls_name)
         return cls
@@ -250,11 +251,10 @@ function M.load_cls_define(cls, parent_name)
 
     if data_type == 'map' then
         cls.new = M.create_map
-        cls.mt = {
-            __index = {__cls = cls},
-            __newindex = M.map_setfield,
-            __oldindex = M.map_setfield,
+        local mt = {
+            __cls = cls,
         }
+        cls.mt = {__index = mt}
         cls.key.name = 'key'
         cls.key = M.load_cls_define(cls.key, cls_name)
         cls.value.name = 'value'
@@ -262,7 +262,7 @@ function M.load_cls_define(cls, parent_name)
         return cls
     end
 
-    error(string.format("unsupport data type<%s>", data_type))
+    error(string_format("unsupport data type<%s>", data_type))
 end
 
 
@@ -283,25 +283,26 @@ function M.struct_setfield(obj, k, v)
     -- print('struct __newindex', obj, k, v)
     local cls = obj.__cls
     if not cls then
-        error(string.format("struct no cls info"))
+        error(string_format("struct no cls info"))
     end
 
     local v_cls = cls.attrs[k]
     if not v_cls then
-        error(string.format('cls<%s> has no attr<%s>', cls.name, k))
+        error(string_format('cls<%s> has no attr<%s>', cls.name, k))
     end
 
     -- optimize, trust cls obj by name
+    local obj_data = obj.__data
     if type(v) == 'table' and v.__cls ~= nil then
         if v_cls.id == v.__cls.id then
             -- print(
             --     '-- struct trust cls obj', 
             --     cls.name, k, v_cls.name, v.__cls
             -- )
-            rawset(obj, k, v)
+            obj_data[k] = v
             return
         end
-        local s = string.format(
+        local s = string_format(
             'obj<%s.%s> value type not match, need<%s>, give<%s>',
             cls.name, k, v_cls.id.name, v.__cls.name
         )
@@ -311,30 +312,31 @@ function M.struct_setfield(obj, k, v)
     -- if v == nil, set node default
     -- print('-- struct, paser ', cls.name, k, v, v_cls.name, v_cls.parser)
     if v == nil and v_cls.is_atom then
-        rawset(obj, k, nil)
+        obj_data[k] = nil
         return
     end
 
-    rawset(obj, k, v_cls:parse(v))
+    obj_data[k] = v_cls:parse(v)
 end
 
 function M.list_setfield(obj, k, v)
     -- print('list __newindex', obj, k, v)
     local cls = obj.__cls
     if not cls then
-        error(string.format("list no cls info"))
+        error(string_format("list no cls info"))
     end
 
-    if k ~= math.tointeger(k) then
-        local s = string.format(
+    if k ~= math_tointeger(k) then
+        local s = string_format(
             'cls<%s> key<%s> data<%s> is not integer', 
             cls.name, k, data
         )
         error(s)
     end
 
+    local obj_data = obj.__data
     if v == nil then -- if v == nil, remove node
-        rawset(obj, k, nil)
+        obj_data[k] = nil
         return
     end
 
@@ -346,17 +348,17 @@ function M.list_setfield(obj, k, v)
             --     '-- list trust cls obj', 
             --     cls.name, k, v_cls.name, v.__cls
             -- )
-            rawset(obj, k, v)
+            obj_data[k] = v
             return
         end
-        local s = string.format(
+        local s = string_format(
             'cls<%s.%s> value type not match, need<%s>, give<%s>',
             cls.name, k, v_cls.id.name, v.__cls.name
         )
         error(s)
     end
 
-    rawset(obj, k, v_cls:parse(v))
+    obj_data[k] = v_cls:parse(v)
 end
 
 function M.map_setfield(obj, k, v)
@@ -364,12 +366,13 @@ function M.map_setfield(obj, k, v)
     -- assert(k ~= "__cls", ERR_CHANGE_KEY_ATTRS)
     local cls = obj.__cls
     if not cls then
-        error(string.format("no cls info<%s>", cls_name))
+        error(string_format("no cls info<%s>", cls_name))
     end
 
+    local obj_data = obj.__data
     local k_data = cls.key:parse(k)
     if v == nil then -- if v == nil, remove node
-        rawset(obj, k_data, nil)
+        obj_data[k_data] = nil
         return
     end
 
@@ -381,24 +384,54 @@ function M.map_setfield(obj, k, v)
             --     '-- map trust cls obj', 
             --     cls.name, k, v_cls.name, v.__cls
             -- )
-            rawset(obj, k_data, v)
+            obj_data[k_data] = v
             return
         end
 
-        local s = string.format(
+        local s = string_format(
             'obj<%s.%s> value type not match, need<%s>, give<%s>',
             cls.name, k_data, v_cls.id.name, v.__cls.name
         )
         error(s)
     end
 
-    rawset(obj, k_data, v_cls:parse(v))
+    obj_data[k_data] = v_cls:parse(v)
+end
+
+
+function M.container_len(obj)
+    return #obj.__data
+end
+
+function M.container_pairs(obj)
+    return next, obj.__data, nil
+end
+
+function M.next(obj, k)
+    -- is normal table
+    if not obj.__cls then
+        return next(obj, k)
+    end
+
+    -- is orm obj
+    return next(obj.__data, k)
 end
 
 function M.create_struct(cls, data)
-    local obj = {}
-    enable_oldindex(obj, true)
-    setmetatable(obj, cls.mt)
+    local _data = {}
+    local obj = {
+        __data = _data,
+    }
+    setmetatable(_data, cls.mt)
+    setmetatable(
+        obj,
+        {
+            __index = _data,
+            __newindex = M.struct_setfield,
+            __pairs =  M.container_pairs,
+            __len = M.container_len,
+        }
+    )
 
     -- check data type
     if data == nil then
@@ -420,25 +453,48 @@ function M.create_struct(cls, data)
 end
 
 function M.create_list(cls, data)
-    local obj = {}
-    enable_oldindex(obj, true)
-    setmetatable(obj, cls.mt)
+    local _data = {}
+    local obj = {
+        __data = _data,
+    }
+    setmetatable(_data, cls.mt)
+    setmetatable(
+        obj,
+        {
+            __index = _data,
+            __newindex = M.list_setfield,
+            __pairs = M.container_pairs,
+            __len = M.container_len,
+        }
+    )
 
     if data == nil then
         return obj
     end
 
-    for idx, item in ipairs(data) do
-        obj[idx] = item
+
+    for idx=1, #data do
+        obj[idx] = data[idx]
     end
     return obj
 end
 
 
 function M.create_map(cls, data)
-    local obj = {}
-    enable_oldindex(obj, true)
-    setmetatable(obj, cls.mt)
+    local _data = {}
+    local obj = {
+        __data = _data,
+    }
+    setmetatable(_data, cls.mt)
+    setmetatable(
+        obj,
+        {
+            __index = _data,
+            __newindex = M.map_setfield,
+            __pairs =  M.container_pairs,
+            __len = M.container_len,
+        }
+    )
 
     if data == nil then
         return obj
@@ -450,12 +506,14 @@ function M.create_map(cls, data)
     return obj
 end
 
+--- 创建orm对象
 function M.create(cls_name, data)
     local cls = cls_map[cls_name]
     if not cls then
-        error(string.format("create obj, illgeal cls<%s>", cls_name))
+        error(string_format("create obj, illgeal cls<%s>", cls_name))
     end
     return cls:new(data)
 end
+
 
 return M
